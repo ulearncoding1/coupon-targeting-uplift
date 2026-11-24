@@ -32,7 +32,7 @@
 │  ├─ 报告/                文献综述、分析文档、演示脚本
 │  ├─ 看板/                06_dashboard.html 与看板说明
 │  └─ logs/                模型文件与运行日志
-├─ 汇报PPT/                41 页幻灯片、页面 XML、图片与历史版本
+├─ 汇报PPT/                当前 41 页 PDF（历史 XML / 旧版不入库）
 └─ _archive/               调试截图等历史文件
 ```
 
@@ -43,6 +43,8 @@
 Makefile                   Linux / GitHub Actions 入口
 scripts/check.ps1          Windows 无 make 时的等价入口
 ```
+
+依赖在 `requirements.txt` 中锁定为 Python 3.13 验证版本；GitHub Actions 使用同一 Python 版本。
 
 常用命令：
 
