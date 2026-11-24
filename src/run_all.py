@@ -160,17 +160,15 @@ def main() -> int:
         selected.append(next(step for step in STEPS if step["id"] == 6))
     ensure_dirs()
 
-    missing_any = False
     print(f"项目根：{ROOT}")
     print(f"计划执行：{len(selected)} 步，从 {selected[0]['script']} 开始\n")
-    for step in selected:
-        missing = check_requires(step)
-        if missing:
-            missing_any = True
-            print(f"[缺输入] {step['script']}：")
-            for path in missing:
-                print(f"  - {path}")
-    if missing_any:
+
+    # 只预检第一步：后续步骤的输入由上游步骤生成，不能在开跑前一次性判死
+    first_missing = check_requires(selected[0])
+    if first_missing:
+        print(f"[缺输入] {selected[0]['script']}：")
+        for path in first_missing:
+            print(f"  - {path}")
         print("\n请先补齐输入文件，或用更小的 --from-step 从上游步骤开始。")
         return 2
 
@@ -191,6 +189,14 @@ def main() -> int:
         log_file.write(header)
 
         for index, step in enumerate(selected, start=1):
+            missing = check_requires(step)
+            if missing:
+                print(f"\n[缺输入] {step['script']}：")
+                for path in missing:
+                    print(f"  - {path}")
+                print("\n已停止：上游产物缺失，请先跑前置步骤。")
+                log_file.write(f"\n[缺输入] {step['script']}: {missing}\n")
+                return 2
             cmd = [sys.executable, str(SRC / step["script"])]
             title = f"[{index}/{len(selected)}] {step['script']} | {step['title']}"
             print(f"\n{title}")
