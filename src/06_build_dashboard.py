@@ -296,6 +296,113 @@ select{border-radius:2px!important;background:var(--paper)!important;color:var(-
   .kpi{border-left:0!important;padding-left:0!important}
 }
 
+/* ===== 视觉改版：蓝色渐变仪表盘 ===== */
+body{
+  background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);
+  background-attachment:fixed;
+  font-family:"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+}
+.sidebar{
+  background:linear-gradient(180deg,#1e3c72 0%,#2a5298 58%,#182848 100%);
+  border-right:0;
+  box-shadow:6px 0 22px rgba(24,40,72,.16);
+  color:#fff;
+}
+.brand{color:rgba(255,255,255,.72)}
+.side-title{font-family:"Segoe UI","Microsoft YaHei",sans-serif;color:#fff;font-size:24px;line-height:1.38}
+.side-sub{color:rgba(255,255,255,.76)}
+.nav{border-top-color:rgba(255,255,255,.18)}
+.nav-item{color:rgba(255,255,255,.72);border-bottom-color:rgba(255,255,255,.12)}
+.nav-item:hover{color:#fff;border-left-color:rgba(255,255,255,.36)}
+.nav-item.active{background:rgba(255,255,255,.12);color:#fff;border-left-color:#7ee8c2}
+.nav-index{color:rgba(255,255,255,.52)}
+.nav-item.active .nav-index{color:#7ee8c2}
+.side-note{color:rgba(255,255,255,.58);border-top-color:rgba(255,255,255,.18)}
+.main{padding:30px 38px 64px;max-width:1480px}
+.hero{
+  background:linear-gradient(90deg,#1e3c72 0%,#2a5298 68%,#4b6cb7 100%);
+  border:0;border-radius:15px;padding:30px 34px;
+  box-shadow:0 8px 22px rgba(30,60,114,.18);color:#fff;
+}
+.hero .eyebrow{color:rgba(255,255,255,.72)}
+.hero h2{font-family:"Segoe UI","Microsoft YaHei",sans-serif;color:#fff;font-size:36px;letter-spacing:-.01em}
+.hero p{color:rgba(255,255,255,.82)}
+.badge{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.24);color:#fff;border-radius:999px;padding:4px 11px}
+.kpi-grid{gap:14px;border-top:0}
+.kpi{
+  background:#fff;border:1px solid #e3e8ef!important;border-top:3px solid var(--view-accent,#2a5298)!important;
+  border-radius:12px;padding:16px 18px;box-shadow:0 4px 12px rgba(30,60,114,.06);
+}
+.kpi:not(:first-child){padding-left:18px}
+.kpi .k{color:#6b7a90}
+.kpi .v{font-family:"Segoe UI","Microsoft YaHei",sans-serif;color:#1e3c72}
+.kpi .s{color:#6b7a90}
+.section-head{border-top:0;margin:36px 0 16px;padding:0}
+.section-head h3{
+  font-family:"Segoe UI","Microsoft YaHei",sans-serif;color:#1e3c72;
+  position:relative;padding-left:14px;
+}
+.section-head h3:before{
+  content:"";position:absolute;left:0;top:5px;bottom:4px;width:4px;border-radius:2px;
+  background:linear-gradient(180deg,#4b6cb7,#00b09b);
+}
+.section-head p{color:#6b7a90}
+.card{
+  background:#fff;border:1px solid #e3e8ef;border-radius:15px;
+  box-shadow:0 6px 18px rgba(30,60,114,.08);padding:22px 24px;overflow:hidden;
+}
+.card h4{
+  font-family:"Segoe UI","Microsoft YaHei",sans-serif;font-size:15px;
+  background:linear-gradient(90deg,#4b6cb7,#182848);color:#fff;
+  padding:13px 17px;margin:-22px -24px 16px;border-radius:14px 14px 0 0;
+}
+.card h4:after{display:none}
+.card p,.note{color:#6b7a90}
+.callout{border-left:4px solid #cbd5e1;background:#f8fafc;border-radius:10px;padding:12px 15px}
+.callout.green{border-left-color:#43a047;background:#eef8ef}
+.callout.red{border-left-color:#e53935;background:#ffebee}
+.callout.navy{border-left-color:#2a5298;background:#e8f1fb}
+.callout.gold{border-left-color:#f0a500;background:#fff8e1}
+.insight{background:#f8fafc;border:1px solid #e3e8ef;border-radius:12px;padding:14px 16px}
+.insight .tag{color:#2a5298}
+.step{background:#f8fafc;border:1px solid #e3e8ef;border-radius:10px;padding:12px 13px}
+.control{background:#f8fafc;border:1px solid #e3e8ef;border-radius:10px;padding:12px 14px}
+.profile-item{background:#f8fafc;border:1px solid #e3e8ef;border-radius:10px;padding:10px 12px}
+.panel,.eval-panel{background:transparent}
+.table-wrap{max-height:560px;overflow:auto;border-radius:10px;border:1px solid #e3e8ef;padding-bottom:0}
+.data-table{min-width:620px;background:#fff}
+.data-table th{
+  background:#2c3e50;color:#fff;border:0;position:sticky;top:0;z-index:3;
+}
+.data-table td{background:#fff;border:1px solid #e9edf3}
+.data-table tbody tr:nth-child(even) td{background:#f8f9fa}
+.data-table tr:hover td{background:#e9f7fe}
+.matrix-table{min-width:0}
+.pill{border-radius:999px;background:#eef3fb;border:0;color:#2a5298;padding:3px 9px}
+.pill.green{background:#e8f5e9;color:#2e7d32;padding:3px 9px}
+.pill.red{background:#ffebee;color:#c62828;padding:3px 9px}
+.pill.navy{background:#eef3fb;color:#2a5298;font-family:"Consolas","Cascadia Mono",monospace;padding:3px 9px}
+select{
+  border-radius:8px!important;border:1px solid #dbe3ee!important;
+  background:#fff!important;color:#1e3c72!important;box-shadow:0 2px 8px rgba(30,60,114,.04);
+}
+.control input[type=number]{border-radius:8px;border-color:#dbe3ee;background:#fff}
+.chart-img{border-radius:10px}
+.footer{border-top:1px solid #dbe3ee;color:#6b7a90;text-align:center;padding-top:18px}
+@media(max-width:820px){
+  .main{padding:20px 16px 50px}
+  .hero{padding:24px 20px}
+  .hero h2{font-size:28px}
+  .card{padding:18px 18px}
+  .card h4{margin:-18px -18px 14px;padding:12px 14px}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .kpi{padding:14px 15px!important}
+  .section-head h3{font-size:22px}
+}
+@media(max-width:560px){
+  .kpi-grid{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
