@@ -1,5 +1,7 @@
 # 优惠券精准投放与增量效果评估
 
+[![pipeline](https://github.com/ulearncoding1/coupon-targeting-uplift/actions/workflows/ci.yml/badge.svg)](https://github.com/ulearncoding1/coupon-targeting-uplift/actions/workflows/ci.yml)
+
 基于 Starbucks Promotions 公开数据的复现项目：从用户分层、响应模型，到增量评估与策略 v2。主线结论是 **完成率不等于增量净额**。
 
 ## 目录
