@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Local environments
+.venv/
+venv/
+env/
+
+# Generated analysis artifacts (rebuild with `make pipeline` or `scripts/check.ps1 -Full`)
+data/clean/
+outputs/
+
+# Local archives and slide working files
+_archive/
+汇报PPT/
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db
