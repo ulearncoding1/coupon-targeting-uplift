@@ -11,7 +11,14 @@ env/
 
 # Generated analysis artifacts (rebuild with `make pipeline` or `scripts/check.ps1 -Full`)
 data/clean/
-outputs/
+outputs/*
+# Keep hand-written deliverables under outputs/报告 and the dashboard README
+!outputs/报告/
+outputs/报告/*
+!outputs/报告/*.md
+!outputs/看板/
+outputs/看板/*
+!outputs/看板/看板说明.md
 
 # Local archives and slide working files
 _archive/

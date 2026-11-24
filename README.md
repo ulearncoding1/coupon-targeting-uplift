@@ -59,7 +59,7 @@ make pipeline
 make ci
 ```
 
-`data/clean/` 和 `outputs/` 是生成物，不提交到 Git；新环境先跑一次全量流水线，再执行回归测试。
+`data/clean/` 和 `outputs/` 下的大部分文件是生成物，默认不提交；`outputs/报告/*.md` 与 `outputs/看板/看板说明.md` 是交付文档，已纳入 Git。新环境先跑一次全量流水线，再执行回归测试。
 
 ## 一键复现
 
@@ -81,7 +81,7 @@ python src\run_all.py --dry-run        # 只检查输入和命令，不执行
 python -m unittest discover -s tests -v
 ```
 
-当前机器完整 00→09 实测约 **4 分 20 秒**；07→09 约 16 秒。
+当前干净目录完整 00→09 实测 **263 秒（约 4 分 23 秒）**；07→09 约 16 秒。
 
 ## 分步运行
 
