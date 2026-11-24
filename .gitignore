@@ -22,7 +22,8 @@ outputs/看板/*
 
 # Local archives and slide working files
 _archive/
-汇报PPT/
+汇报PPT/*
+!汇报PPT/deai_final_rev220.pdf
 
 # Logs and OS files
 *.log
