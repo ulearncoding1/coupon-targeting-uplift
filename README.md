@@ -66,12 +66,14 @@ make ci
 在项目根目录执行：
 
 ```powershell
-python src\run_all.py                 # 从原始 JSON 跑到 09 监控
-python src\run_all.py --from-step 7   # 只跑 SQL / A/B / 监控
+python src\run_all.py                 # 从原始 JSON 跑到 09 监控，最后构建看板
+python src\run_all.py --from-step 7   # 只跑 SQL / A/B / 监控，并自动刷新看板
 python src\run_all.py --dry-run        # 只检查输入和命令，不执行
 ```
 
 每次运行会生成 `outputs\logs\run_all_时间戳.log`，同时打印到控制台。
+
+06 看板依赖 07–09 的验证产物，`run_all` 会自动把 06 排在 09 之后；单独运行 `python src\06_build_dashboard.py` 前，必须先有 07–09 的输出。
 
 跑完做关键结果回归：
 
@@ -113,7 +115,8 @@ python src\09_monitoring.py
 - 监控与稳定性：`outputs\报告\09_监控与稳定性.md`、`outputs\tables\09_psi.csv`、`outputs\figures\09_psi_heatmap.png`
 - 一页纸总结 / 简历描述：`outputs\报告\10_一页纸项目总结.md`、`outputs\报告\10_简历项目描述.md`
 - 分析报告：`outputs\报告\`
-- 最终 PPT：`汇报PPT\deai_final6.pdf`
+- 当前 PDF：`汇报PPT\deai_final_rev220.pdf`（revision 220，41 页，由线上幻灯片导出）
+- 旧版 PDF：`汇报PPT\deai_final6.pdf`（仅保留历史版本，不作为当前交付）
 - 在线幻灯片：<https://my.feishu.cn/slides/ZsH8sInL9lVbqId2HA7czDZs6hg>
 
 ## 口径边界

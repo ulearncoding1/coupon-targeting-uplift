@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""一键运行入口：按 00 -> 09 顺序执行，统一输出到控制台和 outputs/logs/。
+"""一键运行入口：按依赖顺序执行，统一输出到控制台和 outputs/logs/。
 
 用法：
     python src/run_all.py                 # 从 00 开始完整跑
-    python src/run_all.py --from-step 7   # 只跑 SQL / A/B / 监控
+    python src/run_all.py --from-step 7   # 跑 SQL / A/B / 监控，并刷新看板
     python src/run_all.py --dry-run        # 只检查输入文件和命令，不执行
     python src/run_all.py --list           # 列出步骤
 
@@ -11,6 +11,7 @@
 1. 用 subprocess 调每个脚本，保持各脚本可单独运行，不强行改成 import。
 2. 每一步有前置文件检查，缺文件时给出明确提示，不跑到一半才报错。
 3. 每个步骤的 stdout/stderr 同时写入日志，方便复现和排错。
+4. 06 看板依赖 07-09 的验证产物，所以排在最后构建。
 """
 from __future__ import annotations
 
@@ -71,12 +72,6 @@ STEPS = [
         "requires": [TABLE / "04_offer_dataset.csv", CLEAN / "user_segments.csv"],
     },
     {
-        "id": 6,
-        "script": "06_build_dashboard.py",
-        "title": "构建 HTML 六视图看板",
-        "requires": [TABLE / "05_policy_v2.csv", FIG / "05_policy_compare.png"],
-    },
-    {
         "id": 7,
         "script": "07_sql_pipeline.py",
         "title": "DuckDB / Spark SQL 对账",
@@ -100,6 +95,13 @@ STEPS = [
         "script": "09_monitoring.py",
         "title": "监控与稳定性回放",
         "requires": [TABLE / "04_offer_dataset.csv", TABLE / "05_send_windows.csv", CLEAN / "transcript.csv"],
+    },
+    {
+        # 看板依赖 07-09 的验证产物，必须放在最后；不能按编号顺序提前构建
+        "id": 6,
+        "script": "06_build_dashboard.py",
+        "title": "构建 HTML 七视图看板（分析 + 验证）",
+        "requires": [TABLE / "05_policy_v2.csv", FIG / "05_policy_compare.png"],
     },
 ]
 
@@ -153,6 +155,9 @@ def main() -> int:
         parser.error("--from-step 必须在 0-9 之间")
 
     selected = [step for step in STEPS if step["id"] >= args.from_step]
+    # 只跑后段时也补一次看板刷新：验证数据变了，HTML 不能停留在旧快照
+    if args.from_step >= 7 and not any(step["id"] == 6 for step in selected):
+        selected.append(next(step for step in STEPS if step["id"] == 6))
     ensure_dirs()
 
     missing_any = False

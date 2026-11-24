@@ -121,6 +121,17 @@ class ProjectContracts(unittest.TestCase):
         self.assertGreater((DASH / "06_dashboard.html").stat().st_size, 1_000_000)
         self.assertTrue((FIG / "09_psi_heatmap.png").exists())
 
+        html = (DASH / "06_dashboard.html").read_text(encoding="utf-8")
+        self.assertIn('data-view="validation"', html)
+        self.assertIn('id="view-validation"', html)
+
+        runner = (ROOT / "src" / "run_all.py").read_text(encoding="utf-8")
+        self.assertLess(
+            runner.index('"script": "09_monitoring.py"'),
+            runner.index('"script": "06_build_dashboard.py"'),
+            "06 看板必须在 07-09 验证产物之后构建",
+        )
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

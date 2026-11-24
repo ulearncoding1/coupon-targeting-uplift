@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 06_build_dashboard.py
-把 02–05 的 CSV 和关键 PNG 预生成一个单文件 HTML 看板。
+把 02–05 的分析结果和 07–09 的验证结果预生成一个单文件 HTML 看板。
 不依赖 Streamlit，不依赖 fetch/CSV；双击 outputs/看板/06_dashboard.html 即可打开。
+构建顺序：02–05 → 07–09 → 06（看板必须最后构建）。
 """
 from pathlib import Path
 import base64
@@ -16,7 +17,13 @@ OUT = TABLE
 
 
 def read_csv(name: str) -> pd.DataFrame:
-    return pd.read_csv(OUT / name, encoding="utf-8-sig")
+    path = OUT / name
+    if not path.exists():
+        raise FileNotFoundError(
+            f"缺少看板输入：{path}\n"
+            "请先运行 07–09 生成验证数据，或直接运行 python src/run_all.py。"
+        )
+    return pd.read_csv(path, encoding="utf-8-sig")
 
 
 def records(df: pd.DataFrame) -> list[dict]:
