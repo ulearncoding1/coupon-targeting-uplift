@@ -10,7 +10,7 @@ import json
 import pandas as pd
 from PIL import Image
 
-from config import TABLE, FIG, DASH, ASSETS
+from config import TABLE, FIG, DASH, ASSETS, ROOT
 
 OUT = TABLE
 
@@ -62,6 +62,12 @@ deciles = read_csv("05_uplift_deciles.csv")
 policy_v2 = read_csv("05_policy_v2.csv")
 policy_summary = read_csv("05_policy_v2_summary.csv")
 uplift_metrics = read_csv("05_uplift_metrics.csv")
+sql_validation = read_csv("sql/_validation.csv")
+ab_power = read_csv("08_ab_power.csv")
+psi = read_csv("09_psi.csv")
+model_decay = read_csv("09_model_decay.csv")
+coupon_monitor = read_csv("09_coupon_monitor.csv")
+alerts = read_csv("09_alerts.csv")
 
 metric_dict = {str(k): (None if pd.isna(v) else float(v)) for k, v in zip(metrics.metric, metrics.value)}
 summary_dict = {str(k): (None if pd.isna(v) else float(v)) for k, v in zip(policy_summary.metric, policy_summary.value)}
@@ -98,6 +104,13 @@ DATA = {
     "policyV2": records(policy_v2),
     "summary": summary_dict,
     "upliftMetrics": uplift_metric_dict,
+    "sqlValidation": records(sql_validation),
+    "sqlQueryCount": len(list((ROOT / "sql").glob("*.sql"))),
+    "abPower": records(ab_power),
+    "psi": records(psi),
+    "modelDecay": records(model_decay),
+    "couponMonitor": records(coupon_monitor),
+    "alerts": records(alerts),
 }
 
 IMAGES = {
@@ -132,7 +145,7 @@ HTML = r"""<!DOCTYPE html>
   --green:#2F5D50; --red:#8A3B45; --ochre:#B06A3C; --plum:#5B5478; --teal:#3F6B73;
   --gold:#B06A3C; --line:#D8D3C7; --soft:#EEEAE0;
   --accent-overview:#2F4A6D; --accent-segments:#2F5D50; --accent-offers:#8F5B36;
-  --accent-budget:#7E3038; --accent-response:#514A70; --accent-uplift:#35636A;
+  --accent-budget:#7E3038; --accent-response:#514A70; --accent-uplift:#35636A; --accent-validation:#6A5D45;
   --serif:"Source Han Serif SC","Noto Serif SC","STSong","SimSun",serif;
   --sans:"Microsoft YaHei","PingFang SC","Noto Sans SC","Segoe UI",sans-serif;
   --mono:"Consolas","Cascadia Mono",monospace;
@@ -155,6 +168,7 @@ button,input,select{font-family:inherit}
 .nav-item[data-view=budget]{--nav-accent:var(--accent-budget)}
 .nav-item[data-view=response]{--nav-accent:var(--accent-response)}
 .nav-item[data-view=uplift]{--nav-accent:var(--accent-uplift)}
+.nav-item[data-view=validation]{--nav-accent:var(--accent-validation)}
 .nav-item.active{background:transparent;color:var(--ink);font-weight:700;border-left-color:var(--nav-accent,var(--navy))}
 .nav-index{width:auto;height:auto;border-radius:0;background:none;font-family:var(--mono);font-size:10.5px;color:var(--nav-accent,var(--muted));opacity:.6;letter-spacing:.04em;flex:0 0 auto}
 .nav-item.active .nav-index{background:none;color:var(--nav-accent,var(--navy));font-weight:700;opacity:1}
@@ -186,6 +200,7 @@ button,input,select{font-family:inherit}
 #view-budget{--view-accent:var(--accent-budget)}
 #view-response{--view-accent:var(--accent-response)}
 #view-uplift{--view-accent:var(--accent-uplift)}
+#view-validation{--view-accent:var(--accent-validation)}
 .section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin:36px 0 18px;border-top:2px solid var(--view-accent,var(--line));padding-top:18px}
 .section-head h3{font-family:var(--serif);font-size:25px;font-weight:600;margin:0;letter-spacing:-.01em}
 .section-head p{margin:4px 0 0;color:var(--muted);font-size:12.5px;max-width:840px;line-height:1.7}
@@ -295,6 +310,7 @@ select{border-radius:2px!important;background:var(--paper)!important;color:var(-
     <button class="nav-item" data-view="budget"><span class="nav-index">03</span>预算模拟</button>
     <button class="nav-item" data-view="response"><span class="nav-index">04</span>响应排序</button>
     <button class="nav-item" data-view="uplift"><span class="nav-index">05</span>增量评估</button>
+    <button class="nav-item" data-view="validation"><span class="nav-index">06</span>验证与落地</button>
   </nav>
   <div class="side-note">30 天活动 · 17,000 用户<br>76,277 次发券 · 306,534 事件<br>数据源：Kaggle Starbucks Offers</div>
 </div>
@@ -310,6 +326,8 @@ select{border-radius:2px!important;background:var(--paper)!important;color:var(-
       <span class="badge">72h / 168h 窗口</span>
       <span class="badge">AUC 0.866</span>
       <span class="badge">v2 增量净额 +11.9 万</span>
+      <span class="badge">SQL 34 项</span>
+      <span class="badge">A/B 5,542 人</span>
     </div>
   </section>
 
@@ -319,7 +337,7 @@ select{border-radius:2px!important;background:var(--paper)!important;color:var(-
   <section class="view active" id="view-overview">
     <div class="section-head">
       <div><h3>项目总览</h3><p>先把问题讲清楚：为什么“完成率高”不等于“券有效”？</p></div>
-      <span class="pill navy">00 / 06</span>
+      <span class="pill navy">00 / 07</span>
     </div>
 
     <div class="insight-grid">
@@ -357,7 +375,7 @@ select{border-radius:2px!important;background:var(--paper)!important;color:var(-
 
   <!-- ================= 01 人群分层 ================= -->
   <section class="view" id="view-segments">
-    <div class="section-head"><div><h3>人群分层</h3><p>价值维 × 行为维：先回答“谁值得运营”，再回答“谁值得发券”。</p></div><span class="pill navy">01 / 06</span></div>
+    <div class="section-head"><div><h3>人群分层</h3><p>价值维 × 行为维：先回答“谁值得运营”，再回答“谁值得发券”。</p></div><span class="pill navy">01 / 07</span></div>
     <div class="grid-2">
       <div class="card"><h4>3×4 人群矩阵（人数 / 占比）</h4><div class="table-wrap" id="segmentMatrix"></div><p class="note">空组合显示“—”；矩阵中同时给出人数、占比与可完成券完成率。完成率是收到券后的条件概率，不是增量。</p></div>
       <div class="card"><h4>人群画像</h4><select id="segmentSelect" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:2px;background:#fff;margin-bottom:10px"></select><div id="segmentProfile"></div></div>
@@ -369,7 +387,7 @@ select{border-radius:2px!important;background:var(--paper)!important;color:var(-
 
   <!-- ================= 02 券型矩阵 ================= -->
   <section class="view" id="view-offers">
-    <div class="section-head"><div><h3>券型矩阵</h3><p>同一人群，发哪种券最划算？看完成率，也看每千次净 GMV。</p></div><span class="pill navy">02 / 06</span></div>
+    <div class="section-head"><div><h3>券型矩阵</h3><p>同一人群，发哪种券最划算？看完成率，也看每千次净 GMV。</p></div><span class="pill navy">02 / 07</span></div>
     <div class="card">
       <label class="small muted">选择人群：</label>
       <select id="offerSelect" style="width:100%;max-width:420px;padding:8px;border:1px solid var(--line);border-radius:2px;background:#fff;margin:6px 0 12px"></select>
@@ -384,7 +402,7 @@ select{border-radius:2px!important;background:var(--paper)!important;color:var(-
 
   <!-- ================= 03 预算模拟 ================= -->
   <section class="view" id="view-budget">
-    <div class="section-head"><div><h3>预算模拟</h3><p>只给两个全响应人群发 d7；改补贴/触达量，看增量净额怎么变。</p></div><span class="pill navy">03 / 06</span></div>
+    <div class="section-head"><div><h3>预算模拟</h3><p>只给两个全响应人群发 d7；改补贴/触达量，看增量净额怎么变。</p></div><span class="pill navy">03 / 07</span></div>
     <div class="grid-2">
       <div class="card"><h4>可调参数</h4>
         <div class="controls">
@@ -411,7 +429,7 @@ select{border-radius:2px!important;background:var(--paper)!important;color:var(-
 
   <!-- ================= 04 响应排序 ================= -->
   <section class="view" id="view-response">
-    <div class="section-head"><div><h3>响应排序</h3><p>04 的 LightGBM 能排序“会用券的人”，但不能证明券有增量。</p></div><span class="pill navy">04 / 06</span></div>
+    <div class="section-head"><div><h3>响应排序</h3><p>04 的 LightGBM 能排序“会用券的人”，但不能证明券有增量。</p></div><span class="pill navy">04 / 07</span></div>
     <div class="kpi-grid" id="modelKpi"></div>
     <div class="grid-1">
       <div class="card">
@@ -451,7 +469,7 @@ select{border-radius:2px!important;background:var(--paper)!important;color:var(-
 
   <!-- ================= 05 增量评估 ================= -->
   <section class="view" id="view-uplift">
-    <div class="section-head"><div><h3>增量评估</h3><p>券相对纯提醒的增量；分人群、分券型、分人群×券型、T-learner 排序。</p></div><span class="pill navy">05 / 06</span></div>
+    <div class="section-head"><div><h3>增量评估</h3><p>券相对纯提醒的增量；分人群、分券型、分人群×券型、T-learner 排序。</p></div><span class="pill navy">05 / 07</span></div>
     <div class="kpi-grid" id="upliftKpi"></div>
     <div class="subtabs" id="upliftTabs">
       <button class="subtab active" data-subtab="seg">分人群 CATE</button>
@@ -506,7 +524,41 @@ select{border-radius:2px!important;background:var(--paper)!important;color:var(-
     </div>
   </section>
 
-  <div class="footer">优惠券精准投放与增量效果评估 · 公开数据复现 · 00–05 管线 · 本页为单文件 HTML，图表与数据已内嵌；点击图表可放大。</div>
+  <!-- ================= 06 验证与落地 ================= -->
+  <section class="view" id="view-validation">
+    <div class="section-head"><div><h3>验证与落地</h3><p>分析结论之外，补三层可验收证据：SQL 对账、A/B 样本量、离线监控。</p></div><span class="pill navy">06 / 07</span></div>
+
+    <div class="kpi-grid" id="validationKpi"></div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h4>SQL 对账：34 项全过</h4>
+        <div id="sqlSummary"></div>
+        <div id="sqlTable"></div>
+        <p class="note">9 条查询覆盖事件、用户、分层、券矩阵、增量、质量与策略；任何一项不过，策略数字就不应被引用。</p>
+      </div>
+      <div class="card">
+        <h4>A/B 设计：合并 5,542 人</h4>
+        <div id="abSummary"></div>
+        <div id="abTable"></div>
+        <p class="note">MDE 是“能检测到的最小效应”，不是预期收益；合并样本的净额 power 99.5%，高/中价值单看仍不够。</p>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top:18px">
+      <div class="card"><h4>2.5 元净额目标：现有样本 vs 所需样本</h4><div id="abChart" class="chart"></div><p class="note">合并样本缺 3,488 人；高价值缺 5,071 人，中价值缺 280 人。</p></div>
+      <div class="card"><h4>监控：模型衰减与券效</h4><div id="monitorTable"></div><p class="note">D7–13 为基准；D0–6 是冷启动，不作为模型衰减结论。</p></div>
+    </div>
+
+    <div class="grid-2" style="margin-top:18px">
+      <div class="card"><h4>PSI：分数稳定，历史行为是回看伪影</h4><div id="psiTable"></div><p class="note">p_complete PSI 约 0.06，属于 stable；spend_prior 等高 PSI 先核查 30 天回看口径，不直接判线上漂移。</p></div>
+      <div class="card"><h4>告警：12 条，全部 watch</h4><div id="alertTable"></div><p class="note">没有模型、券效或日数据 actionable；12 条均为 check_lookback。</p></div>
+    </div>
+
+    <div class="callout red" style="margin-top:18px"><b>边界：</b>Spark 未实跑、A/B 不是线上实验、监控是离线回放；这一页是验收证据，不是生产系统。</div>
+  </section>
+
+  <div class="footer">优惠券精准投放与增量效果评估 · 公开数据复现 · 00–09 管线 · 分析 + 验证 · 本页为单文件 HTML，图表与数据已内嵌；点击图表可放大。</div>
 </main>
 
 <div class="lightbox" id="lightbox" aria-hidden="true">
@@ -796,6 +848,85 @@ function renderUplift(){
       <div class="profile-item"><div class="k">v2 vs S1</div><div class="v">${wan(s.v2_vs_s1)}</div></div>
     </div>`;
 }
+/* ================= 06 验证与落地 ================= */
+function sqlPassed(r){return r.pass===true || String(r.pass).toLowerCase()==="true";}
+function levelPill(level){
+  if(level==="stable") return '<span class="pill green">稳定</span>';
+  if(level==="warn") return '<span class="pill">关注</span>';
+  return '<span class="pill red">严重</span>';
+}
+function renderValidation(){
+  const sql=DATA.sqlValidation||[];
+  const ab=DATA.abPower||[];
+  const pooled=ab.find(r=>String(r.segment).includes("pooled"))||ab[ab.length-1]||{};
+  const pass=sql.filter(sqlPassed).length;
+  document.getElementById("validationKpi").innerHTML=[
+    ["SQL 对账",pass+" / "+sql.length,"9 条查询 · 全链路"],
+    ["A/B 合并样本",fmtInt(pooled.n_users),"每臂 "+fmtInt(pooled.n_per_arm)+" 人"],
+    ["净额 MDE",fmt2(pooled.mde_net_gmv_80)+" 元","80% power；观测 power "+pct(pooled.power_net_observed)],
+    ["2.5 元缺口",fmtInt(pooled.shortfall_users_net_2_5)+" 人","合并样本还不够"]
+  ].map(([a,b,c])=>`<div class="kpi"><div class="k">${a}</div><div class="v">${b}</div><div class="s">${c}</div></div>`).join("");
+
+  document.getElementById("sqlSummary").innerHTML=`
+    <div class="profile-grid">
+      <div class="profile-item"><div class="k">检查项</div><div class="v">${pass} / ${sql.length}</div></div>
+      <div class="profile-item"><div class="k">SQL 查询</div><div class="v">${fmtInt(DATA.sqlQueryCount)} 条</div></div>
+      <div class="profile-item"><div class="k">结论</div><div class="v">${pass===sql.length?"全部通过":"存在未过"}</div></div>
+    </div>`;
+  const keyChecks=["event::total","user_features::rows","offer_matrix::sends","raw_uplift::coupon","raw_uplift::info","policy::subsidy","policy::inc_gmv","policy::inc_net","policy::roi"];
+  const sqlRows=keyChecks.map(c=>{
+    const r=sql.find(x=>x.check===c);
+    if(!r) return [c,"—","—","—"];
+    const isRoi=c==="policy::roi";
+    return [esc(r.note),isRoi?fmt2(r.actual):fmtInt(r.actual),isRoi?fmt2(r.expected):fmtInt(r.expected),sqlPassed(r)?'<span class="pill green">通过</span>':'<span class="pill red">未过</span>'];
+  });
+  document.getElementById("sqlTable").innerHTML=table(["检查","实际","期望","结果"],sqlRows);
+
+  document.getElementById("abSummary").innerHTML=`
+    <div class="profile-grid">
+      <div class="profile-item"><div class="k">目标样本</div><div class="v">${fmtInt(pooled.n_users)}</div></div>
+      <div class="profile-item"><div class="k">历史 d7 用户</div><div class="v">${fmtInt(pooled.n_coupon_users)}</div></div>
+      <div class="profile-item"><div class="k">净 GMV / 次</div><div class="v">${fmt2(pooled.mu0_info_gmv)} → ${fmt2(pooled.mu1_coupon_net_gmv)}</div></div>
+      <div class="profile-item"><div class="k">合并净额增量</div><div class="v">+${fmt2(pooled.delta_net_gmv)}</div></div>
+      <div class="profile-item"><div class="k">转化 MDE</div><div class="v">${fmt2(pooled.mde_conv_pp_80)}pp</div></div>
+      <div class="profile-item"><div class="k">净额 power</div><div class="v">${pct(pooled.power_net_observed)}</div></div>
+    </div>`;
+  const abLabel=s=>String(s).includes("pooled")?"合并":String(s).replace("价值·全响应型","·全");
+  const abRows=ab.map(r=>[
+    esc(abLabel(r.segment)),fmtInt(r.n_users),fmtInt(r.n_per_arm),fmt2(r.mde_conv_pp_80)+"pp",fmt2(r.mde_net_gmv_80)+" 元",pct(r.power_net_observed),fmtInt(r.required_n_per_arm_net_2_5*2),fmtInt(r.shortfall_users_net_2_5)
+  ]);
+  document.getElementById("abTable").innerHTML=table(["人群","现有 n","每臂","转化 MDE","净额 MDE","净额 power","2.5 元所需总样本","缺口"],abRows);
+  initChart("abChart",{
+    tooltip:{trigger:"axis"},
+    legend:{top:0,data:["现有样本","2.5 元净额所需"]},
+    grid:{left:58,right:18,top:38,bottom:40},
+    xAxis:{type:"category",data:ab.map(r=>abLabel(r.segment)),axisLabel:{fontSize:11}},
+    yAxis:{type:"value",name:"人"},
+    series:[
+      {name:"现有样本",type:"bar",data:ab.map(r=>r.n_users),itemStyle:{color:"#2F5D50"},label:{show:true,position:"top",fontSize:10}},
+      {name:"2.5 元净额所需",type:"bar",data:ab.map(r=>Math.round(r.required_n_per_arm_net_2_5*2)),itemStyle:{color:"#B06A3C"},label:{show:true,position:"top",fontSize:10}}
+    ]
+  });
+
+  const monitorRows=DATA.modelDecay.map(r=>{
+    const c=DATA.couponMonitor.find(x=>x.period===r.period)||{};
+    const alert=r.period==="D7-13"?"基准":r.alert==="ok"?"正常":r.alert==="cold_start"?"冷启动":"—";
+    const cls=r.period==="D7-13"?"":(r.alert==="ok"?"green":"");
+    return [esc(r.period),fmtInt(r.n),pct(r.pos_rate),fmt2(r.auc),fmt2(r.brier),fmt2(c.net_gmv_per_send),"<span class=\"pill "+cls+"\">"+alert+"</span>"];
+  });
+  document.getElementById("monitorTable").innerHTML=table(["周期","n","正率","AUC","Brier","净 GMV/发送","状态"],monitorRows);
+
+  const psiRows=DATA.psi.filter(r=>r.feature==="p_complete"||r.feature==="spend_prior").map(r=>[
+    esc(r.feature_cn),esc(r.period),fmt2(r.psi),levelPill(r.level)
+  ]);
+  document.getElementById("psiTable").innerHTML=table(["特征","周期","PSI","判断"],psiRows);
+
+  const grouped={};
+  DATA.alerts.forEach(r=>{const f=String(r.object).split(" / ")[0];(grouped[f]=grouped[f]||[]).push(r);});
+  const alertRows=Object.entries(grouped).map(([f,items])=>[esc(f),fmtInt(items.length),"<span class=\"pill navy\">"+esc(items[0].action)+"</span>"]);
+  document.getElementById("alertTable").innerHTML=table(["对象","条数","建议动作"],alertRows);
+}
+
 function renderCross(name){
   const rows=DATA.segType.filter(r=>r.segment_name===name);
   const types=OFFER_ORDER.slice(0,5);
@@ -835,14 +966,14 @@ document.getElementById("upliftTabs").addEventListener("click",e=>{
   showSubtab(b.dataset.subtab);
 });
 document.addEventListener("DOMContentLoaded",()=>{
-  renderOverview(); renderSegments(); renderOffers(); renderBudget(); renderResponse(); renderUplift();
+  renderOverview(); renderSegments(); renderOffers(); renderBudget(); renderResponse(); renderUplift(); renderValidation();
   const h=(location.hash||"").replace("#","");
-  if(["overview","segments","offers","budget","response","uplift"].includes(h)) showView(h);
+  if(["overview","segments","offers","budget","response","uplift","validation"].includes(h)) showView(h);
 });
 window.addEventListener("resize",()=>{clearTimeout(window.__rz);window.__rz=setTimeout(resizeCharts,120);});
 window.addEventListener("hashchange",()=>{
   const h=(location.hash||"").replace("#","");
-  if(["overview","segments","offers","budget","response","uplift"].includes(h)) showView(h);
+  if(["overview","segments","offers","budget","response","uplift","validation"].includes(h)) showView(h);
 });
 </script>
 

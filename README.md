@@ -16,7 +16,7 @@
 │  ├─ 03_strategy.py       现状审计与策略矩阵
 │  ├─ 04_response_model.py 响应模型与 SHAP
 │  ├─ 05_uplift.py         增量评估与策略 v2
-│  ├─ 06_build_dashboard.py 六视图看板
+│  ├─ 06_build_dashboard.py 七视图看板（分析 + 验证）
 │  ├─ 07_sql_pipeline.py   DuckDB 执行 SQL 并与 Pandas 结果对账
 │  ├─ 08_ab_power.py      A/B 样本量与功效计算
 │  ├─ 09_monitoring.py     PSI、模型衰减、券效与数据量监控
