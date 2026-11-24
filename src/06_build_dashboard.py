@@ -652,7 +652,7 @@ select{
         <p class="note">9 条查询覆盖事件、用户、分层、券矩阵、增量、质量与策略；任何一项不过，策略数字就不应被引用。</p>
       </div>
       <div class="card">
-        <h4>A/B 设计：合并 5,542 人</h4>
+        <h4>A/B 实验设计：合并 5,542 人</h4>
         <div id="abSummary"></div>
         <div id="abTable"></div>
         <p class="note">MDE 是“能检测到的最小效应”，不是预期收益；合并样本的净额 power 99.5%，高/中价值单看仍不够。</p>
