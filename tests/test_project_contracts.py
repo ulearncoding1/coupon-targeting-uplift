@@ -79,8 +79,8 @@ class ProjectContracts(unittest.TestCase):
         self.assertEqual(len(validation), 34)
         self.assertTrue((validation["pass"].astype(str).str.lower() == "true").all())
         policy = pd.read_csv(TABLE / "sql" / "09_policy_summary.csv", encoding="utf-8-sig").iloc[0]
-        self.assertAlmostEqual(float(policy["inc_net"]), 118878, delta=2)
-        self.assertAlmostEqual(float(policy["incremental_roi"]), 2.628, delta=0.01)
+        self.assertAlmostEqual(float(policy["inc_net"]), 119622, delta=2)
+        self.assertAlmostEqual(float(policy["incremental_roi"]), 2.655, delta=0.01)
 
     def test_ab_power_pooled(self) -> None:
         ab = read_table("08_ab_power.csv")

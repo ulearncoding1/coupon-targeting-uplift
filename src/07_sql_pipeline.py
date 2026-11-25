@@ -149,10 +149,10 @@ def validate() -> pd.DataFrame:
 
     # 09 v2 策略汇总
     pol = pd.read_csv(SQL_OUT / "09_policy_summary.csv").iloc[0]
-    checks.append(_check("policy::subsidy", pol["subsidy"], 73002, 1, "v2 补贴"))
+    checks.append(_check("policy::subsidy", pol["subsidy"], 72258, 1, "v2 期望核销补贴"))
     checks.append(_check("policy::inc_gmv", pol["inc_gmv"], 191880, 2, "v2 增量 GMV"))
-    checks.append(_check("policy::inc_net", pol["inc_net"], 118878, 2, "v2 增量净额"))
-    checks.append(_check("policy::roi", pol["incremental_roi"], 2.628, 0.01, "增量 ROI"))
+    checks.append(_check("policy::inc_net", pol["inc_net"], 119622, 2, "v2 增量净额"))
+    checks.append(_check("policy::roi", pol["incremental_roi"], 2.655, 0.01, "增量 ROI"))
 
     result = pd.DataFrame(checks)
     result.to_csv(SQL_OUT / "_validation.csv", index=False, encoding="utf-8-sig")

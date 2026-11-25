@@ -73,6 +73,9 @@ d.loc[(d.offer_type == "discount") & (d.difficulty == 7), "offer_group"] = "d7"
 d.loc[(d.offer_type == "discount") & (d.difficulty == 10), "offer_group"] = "d10"
 d.loc[(d.offer_type == "discount") & (d.difficulty == 20), "offer_group"] = "d20"
 
+# 期望核销补贴：只有完成券才发生补贴，不能按券面额逐次相减
+d["exp_subsidy"] = d["reward"].fillna(0) * d["y_completed"].fillna(0)
+
 print(f"[1/7] 发券窗口 {len(d):,}：券 {d.coupon.sum():,} / 信息型 {(1-d.coupon).sum():,}")
 print("72h 购买率：券 {:.1%} / 信息 {:.1%}".format(
     d[d.coupon == 1].any72.mean(), d[d.coupon == 0].any72.mean()))
@@ -80,20 +83,26 @@ print("72h 购买率：券 {:.1%} / 信息 {:.1%}".format(
 # ------------------------------------------------------------------
 # 2. 准随机性检查：发券前的协变量平衡
 # ------------------------------------------------------------------
+both_users = d.groupby("person").coupon.nunique()
+paired = d[d.person.isin(both_users[both_users == 2].index)].copy()
+
 balance_cols = ["age", "income", "tenure_days", "n_tx_prior", "avg_order_prior",
                 "recency_h", "n_recv_prior", "comp_rate_prior", "tx_7d",
                 "send_day", "seq_recv", "duration_days"]
 bal = []
 for c in balance_cols:
-    a = d.loc[d.coupon == 1, c].astype(float).dropna()
-    b = d.loc[d.coupon == 0, c].astype(float).dropna()
+    a = paired.loc[paired.coupon == 1, c].astype(float).dropna()
+    b = paired.loc[paired.coupon == 0, c].astype(float).dropna()
     if len(a) < 10 or len(b) < 10:
         continue
     smd = (a.mean() - b.mean()) / np.sqrt((a.var() + b.var()) / 2 + 1e-12)
     bal.append({"covariate": c, "coupon_mean": a.mean(), "info_mean": b.mean(), "smd": smd})
 bal = pd.DataFrame(bal)
+bal["n_coupon"] = int((paired.coupon == 1).sum())
+bal["n_info"] = int((paired.coupon == 0).sum())
+bal["n_users"] = int(paired.person.nunique())
 bal.to_csv(os.path.join(OUT, "05_balance.csv"), index=False, encoding="utf-8-sig")
-print("\n[2/7] 发券前协变量平衡（|SMD|<0.1 视为平衡）")
+print("\n[2/7] 发券前协变量平衡（paired sample，|SMD|<0.1 视为平衡）")
 print(bal.round(3).to_string(index=False))
 
 # ------------------------------------------------------------------
@@ -137,8 +146,6 @@ for y in ["any72", "gmv72", "any168", "gmv168"]:
     add_est(ests, "naive_coupon_vs_info", y, beta[1], se[1], n, "未控制任何协变量")
 
 # 3.2 同一用户内：券 vs 信息（用户 FE + 时间控制）
-both_users = d.groupby("person").coupon.nunique()
-paired = d[d.person.isin(both_users[both_users == 2].index)].copy()
 controls = ["send_day", "send_day_sq", "seq_recv", "hour12", "hour18"]
 for df_ in [d, paired]:
     df_["send_day_sq"] = df_["send_day"] ** 2
@@ -195,16 +202,21 @@ print(seg[["segment_name", "n_sends", "effect_any72", "se_any72", "effect_gmv72"
 for t in ["bogo5", "bogo10", "d7", "d10", "d20"]:
     paired[f"t_{t}"] = (paired.offer_group == t).astype(int)
 type_cols = ["t_bogo5", "t_bogo10", "t_d7", "t_d10", "t_d20"]
+type_groups = ["bogo5", "bogo10", "d7", "d10", "d20"]
+type_names = ["BOGO 5/5", "BOGO 10/10", "折扣 7-3", "折扣 10-2", "折扣 20-5"]
 sub_map = {"BOGO 5/5": 5.0, "BOGO 10/10": 10.0, "折扣 7-3": 3.0, "折扣 10-2": 2.0, "折扣 20-5": 5.0}
 type_rows = []
 for y in ["any72", "gmv72"]:
     beta, se, n = ols_cluster(paired, y, type_cols + controls, fe=True)
-    for i, t in enumerate(["BOGO 5/5", "BOGO 10/10", "折扣 7-3", "折扣 10-2", "折扣 20-5"]):
-        type_rows.append({"offer_type": t, "outcome": y, "estimate": beta[i], "se": se[i],
+    for i, t in enumerate(type_names):
+        type_rows.append({"offer_type": t, "offer_group": type_groups[i], "outcome": y,
+                          "estimate": beta[i], "se": se[i],
                           "ci_low": beta[i] - 1.96 * se[i], "ci_high": beta[i] + 1.96 * se[i],
-                          "n": n, "n_type": int((paired.offer_group == ["bogo5", "bogo10", "d7", "d10", "d20"][i]).sum())})
+                          "n": n, "n_type": int((paired.offer_group == type_groups[i]).sum())})
 type_df = pd.DataFrame(type_rows)
-type_df["subsidy"] = type_df.offer_type.map(sub_map)
+exp_sub_group = d.groupby("offer_group").exp_subsidy.mean()
+type_df["subsidy"] = type_df.offer_group.map(exp_sub_group)
+type_df["face_value"] = type_df.offer_type.map(sub_map)
 type_df["net_gmv72"] = np.where(type_df.outcome == "gmv72", type_df.estimate - type_df.subsidy, np.nan)
 type_df["roi_incremental"] = np.where(type_df.outcome == "gmv72", type_df.estimate / type_df.subsidy, np.nan)
 type_df.to_csv(os.path.join(OUT, "05_type_uplift.csv"), index=False, encoding="utf-8-sig")
@@ -221,13 +233,16 @@ for s in ["高价值·全响应型", "高价值·选择性响应型", "高价值
         continue
     for y in ["any72", "gmv72"]:
         beta, se, n = ols_cluster(sub, y, type_cols + controls, fe=True)
-        for i, t in enumerate(["BOGO 5/5", "BOGO 10/10", "折扣 7-3", "折扣 10-2", "折扣 20-5"]):
-            seg_type_rows.append({"segment_name": s, "offer_type": t, "outcome": y,
-                                  "estimate": beta[i], "se": se[i],
+        for i, t in enumerate(type_names):
+            seg_type_rows.append({"segment_name": s, "offer_type": t, "offer_group": type_groups[i],
+                                  "outcome": y, "estimate": beta[i], "se": se[i],
                                   "ci_low": beta[i] - 1.96 * se[i], "ci_high": beta[i] + 1.96 * se[i],
-                                  "n": n, "n_type": int((sub.offer_group == ["bogo5", "bogo10", "d7", "d10", "d20"][i]).sum())})
+                                  "n": n, "n_type": int((sub.offer_group == type_groups[i]).sum())})
 seg_type_df = pd.DataFrame(seg_type_rows)
-seg_type_df["subsidy"] = seg_type_df.offer_type.map(sub_map)
+exp_sub_seg = d.groupby(["segment_name", "offer_group"], as_index=False).exp_subsidy.mean()
+exp_sub_seg = exp_sub_seg.rename(columns={"exp_subsidy": "subsidy"})
+seg_type_df = seg_type_df.merge(exp_sub_seg, on=["segment_name", "offer_group"], how="left")
+seg_type_df["face_value"] = seg_type_df.offer_type.map(sub_map)
 seg_type_df["net_gmv72"] = np.where(seg_type_df.outcome == "gmv72", seg_type_df.estimate - seg_type_df.subsidy, np.nan)
 seg_type_df["roi_incremental"] = np.where(seg_type_df.outcome == "gmv72", seg_type_df.estimate / seg_type_df.subsidy, np.nan)
 seg_type_df.to_csv(os.path.join(OUT, "05_segment_type_uplift.csv"), index=False, encoding="utf-8-sig")
@@ -354,7 +369,7 @@ for _, pr in pol.iterrows():
         v2_offer, v2_sub, v2_gmv, v2_net, v2_any = "信息型", 0.0, 0.0, 0.0, 0.0
         if len(g):
             b = g.iloc[0]
-            reason = f"券型最优 {b.offer_type} 增量净 {b.net_gmv72:+.2f}/次，仍为负；改信息型"
+            reason = f"券型最优 {b.offer_type} 增量净 {b.net_gmv72:+.2f}/次，但增量 GMV 不显著或未覆盖补贴；改信息型"
         else:
             reason = "样本不足，保持信息型"
     current_net = float(sr.net_gmv72)
@@ -386,27 +401,34 @@ v2_inc_net = float(pol_v2.v2_est_inc_net.sum())
 current_inc_gmv_fe = float((pol_v2.est_sends * pol_v2.effect_gmv72.fillna(0)).sum())
 current_inc_net_fe = float(pol_v2.current_inc_net_est.sum())
 # 把 03 的 S1（只对两个选择性人群发折扣 10-2）用 05 口径重算增量净额
-s1_net = 0.0
+# 补贴口径必须用 03 的实际核销补贴，不能按每张券的 2 元面额逐次相减
+scenario = pd.read_csv(os.path.join(OUT, "03_scenario_compare.csv"), encoding="utf-8-sig")
+s1_row = scenario[scenario["scenario"].astype(str).str.contains("S1")].iloc[0]
+s1_subsidy = float(s1_row["subsidy"])
+s1_inc_gmv = 0.0
 for s in ["高价值·选择性响应型", "中价值·选择性响应型"]:
     b = seg_type_df[(seg_type_df.segment_name == s) & (seg_type_df.offer_type == "折扣 10-2")
                     & (seg_type_df.outcome == "gmv72")].iloc[0]
     sends = float(pol.loc[pol.segment_name == s, "est_sends"].iloc[0])
-    s1_net += sends * (b.estimate - b.subsidy)
+    s1_inc_gmv += sends * b.estimate
+s1_net = s1_inc_gmv - s1_subsidy
 summary = pd.DataFrame([
     {"metric": "current_subsidy", "value": current_subsidy, "note": "03 现状审计"},
-    {"metric": "v2_subsidy", "value": v2_subsidy, "note": "只保留增量净 GMV 为正的人群"},
+    {"metric": "v2_subsidy", "value": v2_subsidy, "note": "期望核销补贴（发券 × 核销率）"},
     {"metric": "current_inc_gmv", "value": current_inc_gmv, "note": "03 账面口径：增量 GMV"},
     {"metric": "current_inc_gmv_fe", "value": current_inc_gmv_fe, "note": "05 用户 FE 口径：增量 GMV"},
     {"metric": "v2_inc_gmv", "value": v2_inc_gmv, "note": "05 口径：只算券相对信息的增量"},
     {"metric": "current_inc_net", "value": current_inc_net, "note": "03 账面口径：增量 GMV − 补贴"},
     {"metric": "current_inc_net_fe", "value": current_inc_net_fe, "note": "05 用户 FE 口径：增量 GMV − 补贴"},
-    {"metric": "v2_inc_net", "value": v2_inc_net, "note": "增量 GMV − 补贴"},
+    {"metric": "v2_inc_net", "value": v2_inc_net, "note": "增量 GMV − 期望核销补贴"},
     {"metric": "delta_inc_net", "value": v2_inc_net - current_inc_net, "note": "v2 − 03 现状"},
     {"metric": "delta_inc_net_fe", "value": v2_inc_net - current_inc_net_fe, "note": "v2 − 05 FE 现状"},
-    {"metric": "s1_inc_net_05", "value": s1_net, "note": "03 S1 用 05 口径重算"},
+    {"metric": "s1_inc_gmv_05", "value": s1_inc_gmv, "note": "03 S1 用 05 口径重算的增量 GMV"},
+    {"metric": "s1_subsidy", "value": s1_subsidy, "note": "03 S1 实际核销补贴"},
+    {"metric": "s1_inc_net_05", "value": s1_net, "note": "03 S1 用 05 口径重算：增量 GMV − 实际补贴"},
     {"metric": "v2_vs_s1", "value": v2_inc_net - s1_net, "note": "v2 − S1（05 口径）"},
     {"metric": "current_inc_roi", "value": current_inc_gmv / current_subsidy, "note": "03 增量 GMV / 补贴"},
-    {"metric": "v2_inc_roi", "value": v2_inc_gmv / v2_subsidy, "note": "05 增量 GMV / 补贴"},
+    {"metric": "v2_inc_roi", "value": v2_inc_gmv / v2_subsidy, "note": "05 增量 GMV / 期望核销补贴"},
     {"metric": "v2_coupon_sends", "value": float(pol_v2[pol_v2.v2_subsidy_per_send > 0].est_sends.sum()), "note": ""},
     {"metric": "v2_info_sends", "value": float(pol_v2[pol_v2.v2_subsidy_per_send == 0].est_sends.sum()), "note": ""},
 ])
@@ -504,7 +526,7 @@ save_fig(fig, os.path.join(FIG, "05_uplift_deciles.png"))
 # 7.5 方案对比：补贴 vs 增量净额
 sm = summary.set_index("metric").value
 schemes = ["S0 现状", "S1\n03：选择性发 d10", "v2\n只给全响应发 d7"]
-subs = [sm["current_subsidy"] / 10000, 41959 / 10000, sm["v2_subsidy"] / 10000]
+subs = [sm["current_subsidy"] / 10000, sm["s1_subsidy"] / 10000, sm["v2_subsidy"] / 10000]
 nets = [sm["current_inc_net_fe"] / 10000, sm["s1_inc_net_05"] / 10000, sm["v2_inc_net"] / 10000]
 fig, axes = plt.subplots(1, 2, figsize=(10.2, 4.6), gridspec_kw={"width_ratios": [1, 1.15]})
 ax = axes[0]

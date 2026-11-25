@@ -414,9 +414,9 @@ select{
 </head>
 <body>
 <div class="sidebar">
-  <div class="brand">数据科学课程项目 · 2026</div>
+  <div class="brand">Coupon Targeting · 2026</div>
   <h1 class="side-title">优惠券精准投放<br>与增量效果评估</h1>
-  <p class="side-sub">公开数据复现 · Starbucks Promotions</p>
+  <p class="side-sub">Starbucks Promotions · 策略分析</p>
   <nav class="nav" id="nav">
     <button class="nav-item active" data-view="overview"><span class="nav-index">00</span>项目总览</button>
     <button class="nav-item" data-view="segments"><span class="nav-index">01</span>人群分层</button>
@@ -431,7 +431,7 @@ select{
 
 <main class="main">
   <section class="hero">
-    <div class="eyebrow">数据科学课程项目 · 公开数据复现</div>
+    <div class="eyebrow">优惠券投放策略 · 增量评估 · 预算决策</div>
     <h2>从“谁会买”到“因为券才买”</h2>
     <p>用信息型券作“同触达准对照”，结合用户固定效应与 T-learner，把券的增量拆到人群 × 券型；再用“增量 GMV − 补贴”而不是账面 ROI，决定预算发给谁。</p>
     <div class="badges">
@@ -439,9 +439,9 @@ select{
       <span class="badge">6 种券型</span>
       <span class="badge">72h / 168h 窗口</span>
       <span class="badge">AUC 0.866</span>
-      <span class="badge">v2 增量净额 +11.9 万</span>
+      <span class="badge">v2 增量净额 +11.96 万</span>
       <span class="badge">SQL 34 项</span>
-      <span class="badge">A/B 5,542 人</span>
+      <span class="badge">A/B 设计 5,542 人</span>
     </div>
   </section>
 
@@ -457,7 +457,7 @@ select{
     <div class="insight-grid">
       <div class="insight"><div class="tag">问题</div><h5>完成率 ≠ 增量</h5><p>03 中全响应人群完成率 100%，容易被看成券带来了全部购买；但信息型券本身也会提醒购买。没有反事实，就无法判断“谁是因为券才买”。</p></div>
       <div class="insight"><div class="tag">方法</div><h5>信息型券作准对照</h5><p>同一用户既收到过券、也收到过信息型券；比较 72h 购买率/GMV，并用用户固定效应吸收稳定画像。</p></div>
-      <div class="insight"><div class="tag">判断</div><h5>账面净额会高估</h5><p>S1 账面净额 +16.8 万，增量口径 −5.5 万；v2 只给全响应发 d7，增量净额 +11.9 万。</p></div>
+      <div class="insight"><div class="tag">判断</div><h5>账面净额会高估</h5><p>S1 账面净额 +16.8 万，05 同口径 −3.08 万；v2 是回溯上限测算，增量净额 +11.96 万，不是可上线规则。</p></div>
     </div>
 
     <div class="card" style="margin-top:18px">
@@ -475,10 +475,10 @@ select{
     <div class="grid-2" style="margin-top:18px">
       <div class="card"><h4>三组关键对比</h4>
         <div class="callout green" style="margin-bottom:10px"><b>① 全响应不是“伪增量”</b><br>高·全响应 +9.6pp、中·全响应 +20.5pp；不发券时仍有 69%/37.5% 会买。</div>
-        <div class="callout gold" style="margin-bottom:10px"><b>② 选择性“有转化但不赚钱”</b><br>高·选择性 d7 +7.6pp，但增量 GMV 1.87 元 < 补贴 3 元，净额 −1.13。</div>
-        <div class="callout red"><b>③ 账面净额 ≠ 增量净额</b><br>S1 账面 +16.8 万，05 同口径 −5.5 万；v2 +11.9 万。</div>
+        <div class="callout gold" style="margin-bottom:10px"><b>② 选择性“有转化但不赚钱”</b><br>高·选择性 d7 +7.6pp，但增量 GMV 1.87 元 &lt; 期望补贴 2.52 元，净额 −0.65。</div>
+        <div class="callout red"><b>③ 账面净额 ≠ 增量净额</b><br>S1 账面 +16.8 万，05 同口径 −3.08 万；v2 回溯测算 +11.96 万。</div>
       </div>
-      <div class="card"><h4>v2 预算对比</h4><img class="chart-img" src="__IMG_policy_compare__" alt="S0/S1/v2 补贴与增量净额对比"><p class="note">补贴：S0 16.5 万 → S1 4.2 万 → v2 7.3 万；增量净额：S0 −6.3 万 → S1 −5.5 万 → v2 +11.9 万。</p></div>
+      <div class="card"><h4>v2 预算对比</h4><img class="chart-img" src="__IMG_policy_compare__" alt="S0/S1/v2 补贴与增量净额对比"><p class="note">补贴：S0 16.5 万 → S1 4.2 万 → v2 7.2 万；增量净额：S0 −6.3 万 → S1 −3.08 万 → v2 +11.96 万。</p></div>
     </div>
 
     <div class="card" style="margin-top:18px">
@@ -534,7 +534,7 @@ select{
           <div class="kpi"><div class="k">增量净额</div><div class="v" id="bNet">—</div><div class="s">增量 GMV − 补贴</div></div>
           <div class="kpi"><div class="k">增量 ROI</div><div class="v" id="bRoi">—</div><div class="s">增量 GMV / 补贴</div></div>
         </div>
-        <div class="callout green" style="margin-top:14px" id="budgetHint">发券次数与补贴在默认值时，接近 05 的 v2：补贴 7.3 万、增量净额 11.9 万。</div>
+        <div class="callout green" style="margin-top:14px" id="budgetHint">发券次数与补贴在默认值时，接近 05 的 v2：期望核销补贴 7.2 万、增量净额 11.96 万。</div>
       </div>
     </div>
     <div class="card" style="margin-top:18px"><h4>S0 / S1 / v2 对比</h4><div id="budgetChart" class="chart"></div></div>
@@ -604,7 +604,7 @@ select{
     <div class="panel" id="panel-type">
       <div class="grid-2">
         <div class="card"><h4>分券型增量</h4><img class="chart-img" src="__IMG_type_effects__" alt="分券型增量柱状图"></div>
-        <div class="card"><h4>读法</h4><div class="callout green"><b>d7 最优：</b>+8.14pp、增量净额 +0.23/次、ROI 1.08，是唯一增量净额为正的券型。</div><div class="callout red" style="margin-top:10px"><b>d20 显著为负：</b>−8.44pp；门槛 20 元高于多数人一单客单，用户会等/凑/放弃。</div><div class="callout gold" style="margin-top:10px"><b>BOGO 贵：</b>BOGO 10/10 购买率 +6.76pp，但补贴 10 元，增量净额 −7.68。</div></div>
+        <div class="card"><h4>读法</h4><div class="callout green"><b>d7 最优：</b>+8.14pp、增量净额 +1.23/次、ROI 1.61，整体净额最高；d10 也为正（+0.63/次、ROI 1.52）。</div><div class="callout red" style="margin-top:10px"><b>d20 显著为负：</b>−8.44pp；门槛 20 元高于多数人一单客单，用户会等/凑/放弃。</div><div class="callout gold" style="margin-top:10px"><b>BOGO 贵：</b>BOGO 10/10 购买率 +6.76pp，但期望补贴 4.55 元，增量净额 −2.23。</div></div>
       </div>
       <div class="card" style="margin-top:18px"><h4>分券型明细</h4><div id="typeUpliftTable"></div></div>
     </div>
@@ -617,7 +617,7 @@ select{
           <div><div id="crossTable"></div></div>
           <div><div id="crossChart" class="chart"></div></div>
         </div>
-        <p class="note">这张表回答“不是发不发，而是发哪种”：高·选择性 d7 +7.6pp，但增量净额 −1.13；d20 −22.6pp。</p>
+        <p class="note">这张表回答“不是发不发，而是发哪种”：高·选择性 d7 +7.6pp，但增量净额 −0.65；d20 −22.6pp。</p>
       </div>
     </div>
 
@@ -632,7 +632,7 @@ select{
     <div class="panel" id="panel-policy">
       <div class="grid-2">
         <div class="card"><h4>v2 策略表</h4><div id="policyV2TableUplift"></div></div>
-        <div class="card"><h4>预算汇总</h4><div id="policySummaryCards"></div><p class="note">S1 的 +16.8 万是账面净额；05 同口径 −5.5 万。v2 +11.9 万。</p></div>
+        <div class="card"><h4>预算汇总</h4><div id="policySummaryCards"></div><p class="note">S1 的 +16.8 万是账面净额；05 同口径 −3.08 万。v2 是回溯上限测算，增量净额 +11.96 万，不是可上线规则。</p></div>
       </div>
       <div class="card" style="margin-top:18px"><h4>S0 / S1 / v2 增量净额</h4><img class="chart-img" src="__IMG_policy_compare__" alt="S0/S1/v2 对比"></div>
     </div>
@@ -672,7 +672,7 @@ select{
     <div class="callout red" style="margin-top:18px"><b>边界：</b>Spark 未实跑、A/B 不是线上实验、监控是离线回放；这一页是验收证据，不是生产系统。</div>
   </section>
 
-  <div class="footer">优惠券精准投放与增量效果评估 · 公开数据复现 · 00–09 管线 · 分析 + 验证 · 本页为单文件 HTML，图表与数据已内嵌；点击图表可放大。</div>
+  <div class="footer">优惠券精准投放与增量效果评估 · 策略分析 · 00–09 管线 · 分析 + 验证 · 本页为单文件 HTML，图表与数据已内嵌；点击图表可放大。</div>
 </main>
 
 <div class="lightbox" id="lightbox" aria-hidden="true">
@@ -734,10 +734,10 @@ function renderOverview(){
   const rows=[
     ["整体增量（72h 购买率）","+2.36pp（SE 0.47）","用户 FE；朴素 +3.03pp"],
     ["整体增量（72h GMV）","+1.478 元/次","信息型本身已带来大部分购买"],
-    ["最值得发券人群","高·全响应 / 中·全响应","d7 增量净额 +5.06 / +3.46 元/次"],
-    ["最需拆分的人群","高·选择性","当前组合 −4.7pp；d7 +7.6pp 但净额 −1.13"],
-    ["v2 补贴 / 增量净额","7.3 万 / +11.9 万","增量 ROI 2.63"],
-    ["S1 账面 / 增量","+16.8 万 / −5.5 万","账面净额会骗人"]
+    ["最值得发券人群","高·全响应 / 中·全响应","d7 增量净额 +5.08 / +3.59 元/次"],
+    ["最需拆分的人群","高·选择性","当前组合 −4.7pp；d7 +7.6pp 但净额 −0.65"],
+    ["v2 补贴 / 增量净额","7.2 万 / +11.96 万","增量 ROI 2.655；回溯上限"],
+    ["S1 账面 / 增量","+16.8 万 / −3.08 万","账面净额会骗人；口径不同"]
   ];
   document.getElementById("overviewTable").innerHTML = table(["指标","数值","说明"],rows);
 }
@@ -841,7 +841,7 @@ function renderBudget(){
   budgetCompute();
   const s=DATA.summary;
   const cats=["S0 现状","S1 03 d10","v2 d7 全响应"];
-  const subsidy=[s.current_subsidy/10000,41959/10000,s.v2_subsidy/10000];
+  const subsidy=[s.current_subsidy/10000,s.s1_subsidy/10000,s.v2_subsidy/10000];
   const net=[s.current_inc_net_fe/10000,s.s1_inc_net_05/10000,s.v2_inc_net/10000];
   initChart("budgetChart",{
     tooltip:{trigger:"axis",valueFormatter:v=>v.toFixed(2)+" 万"},
