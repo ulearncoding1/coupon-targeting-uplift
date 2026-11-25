@@ -119,10 +119,10 @@ python src\09_monitoring.py
 - 监控与稳定性：`outputs\报告\09_监控与稳定性.md`、`outputs\tables\09_psi.csv`、`outputs\figures\09_psi_heatmap.png`
 - 一页纸总结 / 简历描述：`outputs\报告\10_一页纸项目总结.md`、`outputs\报告\10_简历项目描述.md`
 - 分析报告：`outputs\报告\`
-- 当前 PDF：`汇报PPT\deai_final_rev275.pdf`（revision 275，41 页，由线上幻灯片导出；术语与结论已统一）
-- 上一版 PDF：`汇报PPT\deai_final_rev237.pdf`（revision 237，保留历史）
-- 旧版 PDF：`汇报PPT\deai_final_rev220.pdf`（revision 220，保留历史）
-- 更早版本：`汇报PPT\deai_final6.pdf`（仅保留历史，不作为当前交付）
+- 当前 PDF：`汇报PPT\deai_final_rev280.pdf`（revision 280，41 页，由线上幻灯片导出；术语与结论已统一）
+- 上一版 PDF：`汇报PPT\deai_final_rev275.pdf`（revision 275，保留历史）
+- 旧版 PDF：`汇报PPT\deai_final_rev237.pdf`（revision 237，保留历史）
+- 更早版本：`汇报PPT\deai_final_rev220.pdf`、`汇报PPT\deai_final6.pdf`（仅保留历史，不作为当前交付）
 - 在线幻灯片：<https://my.feishu.cn/slides/ZsH8sInL9lVbqId2HA7czDZs6hg>
 
 ## 口径边界
