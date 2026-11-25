@@ -546,7 +546,9 @@ for i, v in enumerate(nets):
 ax.set_title("增量净额（05 口径）")
 ax.set_ylabel("万元")
 ax.set_ylim(min(nets) * 1.25, max(nets) * 1.25)
-fig.suptitle("账面净额会骗人：S1 的增量净额约 −5.5 万，v2 约 +11.9 万", fontsize=12, y=1.02)
+s1_txt = f"{sm['s1_inc_net_05'] / 10000:+.2f}".replace("-", "−")
+v2_txt = f"{sm['v2_inc_net'] / 10000:+.2f}".replace("-", "−")
+fig.suptitle(f"账面净额会骗人：S1 的增量净额约 {s1_txt} 万，v2 约 {v2_txt} 万", fontsize=12, y=1.02)
 fig.tight_layout()
 save_fig(fig, os.path.join(FIG, "05_policy_compare.png"))
 
